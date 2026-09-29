@@ -904,25 +904,13 @@
       }
       state.subjects = boot.subjects;
       state.tags = boot.tags || [];
-      window.__probe = ['start'];
-      try {
-        fillSubjectSelects();
-        window.__probe.push('subjects');
-        fillTypeSelects();
-        window.__probe.push('types');
-        fillTagDatalists();
-        window.__probe.push('tags');
-        refreshOverview();
-        window.__probe.push('overview');
-        if (window.ZJ_Exams) { window.ZJ_Exams.init({ ZJ: ZJ, Data: Data, state: state }); }
-        window.__probe.push('exams');
-        if (window.ZJ_Builder) { window.ZJ_Builder.init({ ZJ: ZJ, Data: Data, state: state }); }
-        window.__probe.push('builder');
-        switchTab('builder');
-        window.__probe.push('switch');
-      } catch (e) {
-        window.__probe.push('ERR:' + String(e && e.message || e));
-      }
+      fillSubjectSelects();
+      fillTypeSelects();
+      fillTagDatalists();
+      refreshOverview();   // 后台刷新统计（含回收站角标），默认页签为组卷台
+      if (window.ZJ_Exams) { window.ZJ_Exams.init({ ZJ: ZJ, Data: Data, state: state }); }
+      if (window.ZJ_Builder) { window.ZJ_Builder.init({ ZJ: ZJ, Data: Data, state: state }); }
+      switchTab('builder');
       return null;
     });
   }).catch(function (err) {
