@@ -2312,3 +2312,49 @@ input[type="checkbox"] { accent-color: var(--gold-600); }
 .row-actions { gap: 5px; }
 .btn-mini:active, .chip:active { transform: scale(0.94); }
 .table.data td { padding: 10px 14px; }
+
+/* ================= 登录：方式页签 / 邮箱验证码 ================= */
+.login-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+.ltab {
+  flex: 1;
+  height: 34px;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: var(--tx-2);
+  transition: all var(--t-fast);
+}
+.ltab:hover { color: var(--gold-700); }
+.ltab.on {
+  background: #fff;
+  color: var(--ink-800);
+  font-weight: 600;
+  box-shadow: var(--sh-1), inset 0 0 0 1px var(--gold-300);
+}
+.code-row { display: flex; gap: 8px; }
+.code-row input { flex: 1; min-width: 0; }
+.code-btn {
+  flex: none;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--gold-400);
+  background: var(--gold-100);
+  color: var(--gold-700);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all var(--t-fast);
+}
+.code-btn:hover:not(:disabled) { background: var(--gold-500); border-color: var(--gold-500); color: #fff; }
+.code-btn:disabled { opacity: 0.55; cursor: not-allowed; }
