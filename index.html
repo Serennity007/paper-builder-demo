@@ -4,23 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>登录 · 国际课程组卷系统</title>
-  <link rel="stylesheet" href="css/style.css?v=20260929a">
+  <link rel="stylesheet" href="css/style.css?v=20261001b">
 </head>
 <body class="login-body">
 
   <div class="login-wrap">
   <!-- 左侧：品牌区 -->
   <aside class="login-brand">
-    <h1 class="lb-name-zh">成都智慧象留学</h1>
-    <div class="lb-name-en">CHENGDU SMART ELEPHANT EDUCATION</div>
-    <div class="lb-divider"></div>
-    <p class="lb-slogan">让教研沉淀成一份份好卷子</p>
-    <p class="lb-system">国际课程组卷系统</p>
-    <div class="lb-programs" aria-label="国际课程体系">
-      <div class="pg-item"><div class="pg-name">IELTS</div><div class="pg-sub">雅思 4 科</div></div>
-      <div class="pg-item"><div class="pg-name">TOEFL</div><div class="pg-sub">托福 4 科</div></div>
-      <div class="pg-item"><div class="pg-name">A-Level</div><div class="pg-sub">4 门主流学科</div></div>
-      <div class="pg-item"><div class="pg-name">AP</div><div class="pg-sub">5 门美国先修</div></div>
+    <div class="lb-aura"></div>
+    <div class="lb-aura b"></div>
+    <div class="lb-papers" aria-hidden="true"><i class="f1"></i><i class="f2"></i></div>
+
+    <div class="lb-inner">
+      <div class="lb-eyebrow">Chengdu Smart Elephant Education</div>
+      <h1 class="lb-name-zh">成都智慧象留学</h1>
+      <p class="lb-slogan">让教研沉淀成一份份好卷子</p>
+      <p class="lb-system">国际课程组卷系统</p>
+      <div class="lb-programs" aria-label="国际课程体系">
+        <div class="pg-item"><div class="pg-name">IELTS</div><div class="pg-sub">雅思 4 科</div></div>
+        <div class="pg-item"><div class="pg-name">TOEFL</div><div class="pg-sub">托福 4 科</div></div>
+        <div class="pg-item"><div class="pg-name">A-Level</div><div class="pg-sub">4 门主流学科</div></div>
+        <div class="pg-item"><div class="pg-name">AP</div><div class="pg-sub">5 门美国先修</div></div>
+      </div>
     </div>
     <div class="lb-foot">成都智慧象留学 · 教研组卷工作台</div>
   </aside>
@@ -37,9 +42,18 @@
           <input type="text" id="account" placeholder="请输入教师账号">
           <span class="f-hint">演示账号：teacher / wangli</span>
         </div>
-        <div class="field" id="field-password">
+        <div class="field" id="field-password" style="position:relative;">
           <label for="password">密码</label>
-          <input type="password" id="password" placeholder="请输入密码">
+          <input type="password" id="password" placeholder="请输入密码" style="padding-right:46px;">
+          <button type="button" id="btn-eye" aria-label="显示或隐藏密码" title="显示 / 隐藏密码"
+            style="position:absolute;right:8px;bottom:34px;width:32px;height:32px;border:none;background:transparent;color:var(--c-text-light);display:inline-flex;align-items:center;justify-content:center;border-radius:6px;transition:color .18s,background .18s;">
+            <svg id="eye-on" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/>
+            </svg>
+            <svg id="eye-off" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" style="display:none;">
+              <path d="M2 12s3.5-6.5 10-6.5c2 0 3.7.6 5.2 1.5M22 12s-3.5 6.5-10 6.5c-2 0-3.7-.6-5.2-1.5"/><path d="M4 20L20 4"/>
+            </svg>
+          </button>
           <span class="f-hint">演示密码：zx123456</span>
         </div>
 
@@ -49,16 +63,17 @@
       </form>
 
       <div class="login-mode-note" id="mode-note">正在探测运行环境…</div>
-      <div class="login-mode-note" style="margin-top:6px;">
-        学生作答入口：<a href="answer.html" style="color:var(--c-gold-deep);border-bottom:1px solid var(--c-gold);">在线答题（凭老师提供的答题码）</a>
+      <div class="login-mode-note" style="margin-top:8px;">
+        学生作答入口：<a href="answer.html" style="color:var(--c-gold-deep);border-bottom:1px solid var(--c-gold);padding-bottom:1px;">在线答题（凭老师提供的答题码）</a>
       </div>
     </section>
   </main>
   </div>
 
-  <script src="js/common.js?v=20260929a"></script>
-  <script src="js/mock-data.js?v=20260929a"></script>
-  <script src="js/api.js?v=20260929a"></script>
+  <script src="js/common.js?v=20261001b"></script>
+  <script src="js/mock-data.js?v=20261001b"></script>
+  <script src="js/api.js?v=20261001b"></script>
+  <script src="js/micro.js?v=20261001b"></script>
   <script>
     (function () {
       'use strict';
@@ -79,6 +94,17 @@
         document.getElementById('field-account').classList.remove('err');
         document.getElementById('field-password').classList.remove('err');
       }
+
+      // 密码可见性切换
+      var eyeBtn = document.getElementById('btn-eye');
+      eyeBtn.addEventListener('click', function () {
+        var input = document.getElementById('password');
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        document.getElementById('eye-on').style.display = show ? 'none' : '';
+        document.getElementById('eye-off').style.display = show ? '' : 'none';
+        input.focus();
+      });
 
       // 已登录直接进工作台
       var auth = window.ZJ.loadAuth();
