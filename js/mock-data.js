@@ -9,7 +9,7 @@
  "credentials": [
   {
    "account": "teacher",
-   "password": "zx123456",
+   "password": "123456",
    "name": "金老师",
    "title": "教学总监",
    "role": "admin",
@@ -17,7 +17,7 @@
   },
   {
    "account": "wangli",
-   "password": "zx123456",
+   "password": "123456",
    "name": "王丽",
    "title": "教研组长",
    "role": "teacher",

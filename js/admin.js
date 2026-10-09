@@ -61,12 +61,17 @@
   });
 
   function switchTab(name) {
+    name = ({bank:'cards', practice:'cards', builder:'compose', papers:'compose'})[name] || name;
+    if (['archive','cards','compose','leads'].indexOf(name) < 0) { name = 'archive'; }
+    state.activeTab = name;
     document.querySelectorAll('.nav-tab').forEach(function (t) {
       t.classList.toggle('active', t.dataset.tab === name);
     });
-    ['overview', 'bank', 'builder', 'papers', 'archive', 'practice', 'exams', 'audit'].forEach(function (tab) {
+    ['overview', 'bank', 'builder', 'papers', 'archive', 'practice', 'exams', 'audit', 'cards', 'compose', 'leads'].forEach(function (tab) {
       document.getElementById('tab-' + tab).hidden = tab !== name;
     });
+    if ((name === 'cards' || name === 'compose') && window.ZJ_Workspace) { window.ZJ_Workspace.refresh(name); }
+    if (name === 'leads' && window.ZJ_Leads) { window.ZJ_Leads.refresh(); }
     if (name === 'overview') { refreshOverview(); }
     if (name === 'bank') { loadBank(); }
     if (name === 'papers') { loadPapers(); }
@@ -169,12 +174,10 @@
   /* ================= 题库 ================= */
 
   var bankFilters = { q: '', subject: '全部科目', qtype: '全部题型', difficulty: '全部难度', status: '全部状态' };
-
   function fillSubjectSelects() {
     var groups = state.subjects || ZJ.SUBJECT_CATALOG;
     document.getElementById('q-subject').innerHTML = ZJ.subjectOptions(groups, '全部科目', '全部科目');
-    document.getElementById('e-subject').innerHTML = ZJ.subjectOptions(groups) +
-      '<option value="__new__">＋ 新增科目…</option>';
+    document.getElementById('e-subject').innerHTML = ZJ.subjectOptions(groups);
   }
 
   function fillTypeSelects() {
@@ -267,7 +270,6 @@
     document.getElementById('q-check-all').checked = false;
     updateBatchBar();
   });
-  document.getElementById('batch-bar').hidden = true; // 初始未选择时隐藏
   document.getElementById('batch-bar').addEventListener('click', function (e) {
     var btn = e.target.closest('button[data-batch]');
     if (!btn || !selectedIds.size) { return; }
@@ -893,6 +895,27 @@
 
   /* ================= 启动 ================= */
 
+  // 页签模块脚本（builder/exams/archive）在 admin.js 之后加载。若异步引导先于这些脚本解析完成，
+  // window.ZJ_* 可能尚未定义；早期版本用有限次轮询、超时后静默放弃，脚本更晚到达时页签会永久空白
+  // 且无恢复路径。改为「就绪即初始化 + window.load 兜底」，不设放弃分支：
+  //   · 初始化只执行一次（settled 守卫）；
+  //   · 始终以 state.activeTab 保留用户当前页签；
+  //   · window.load 之后所有经典 <script> 必然已执行完，故再确定性尝试一次。
+  function initModule(name, ctx) {
+    if (window[name]) { window[name].init(ctx); return; }
+    var settled = false;
+    function ready() {
+      if (settled || !window[name]) { return false; }
+      settled = true;
+      window[name].init(ctx);
+      switchTab(state.activeTab || 'archive');
+      return true;
+    }
+    var timer = setInterval(function () { if (ready()) { clearInterval(timer); } }, 20);
+    window.addEventListener('load', function () { if (ready()) { clearInterval(timer); } });
+    if (document.readyState === 'complete') { if (ready()) { clearInterval(timer); } }
+  }
+
   initTopbar();
   initModeChip();
   ZJ.injectWatermark();
@@ -910,11 +933,11 @@
       fillSubjectSelects();
       fillTypeSelects();
       fillTagDatalists();
-      refreshOverview();   // 后台刷新统计（含回收站角标），默认页签为组卷台
-      if (window.ZJ_Exams) { window.ZJ_Exams.init({ ZJ: ZJ, Data: Data, state: state }); }
-      if (window.ZJ_Builder) { window.ZJ_Builder.init({ ZJ: ZJ, Data: Data, state: state }); }
-      if (window.ZJ_Archive) { window.ZJ_Archive.init({ ZJ: ZJ, Data: Data, state: state }); }
-      switchTab('builder');
+      // 三模块后台：不初始化旧总览、考试、刷题或文本组卷工作区。
+      var ctx = { ZJ: ZJ, Data: Data, state: state };
+      initModule('ZJ_Archive', ctx);
+      initModule('ZJ_Workspace', ctx);
+      switchTab('archive');
       return null;
     });
   }).catch(function (err) {

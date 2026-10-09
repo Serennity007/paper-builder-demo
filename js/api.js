@@ -77,16 +77,6 @@
           return data.profile;
         });
     },
-    sendEmailCode: function (email) {
-      return API.req('POST', '/api/auth/email-code', { email: email });
-    },
-    emailLogin: function (email, code) {
-      return API.req('POST', '/api/auth/email-login', { email: email, code: code })
-        .then(function (data) {
-          API.saveToken(data.token);
-          return data.profile;
-        });
-    },
     logout: function () {
       if (API.mode === 'server' && API.token) {
         API.req('POST', '/api/auth/logout').catch(function () { /* 忽略 */ });
@@ -282,6 +272,70 @@
     deleteExamPaper: function (id) {
       return API.req('DELETE', '/api/exam-papers/' + encodeURIComponent(id));
     },
+    uploadExamPaperPdf: function (id, kind, file) {
+      var fd = new FormData();
+      fd.append('file', file);
+      return fetch('/api/exam-papers/' + encodeURIComponent(id) + '/files/' + kind,
+        { method: 'POST', headers: { Authorization: 'Bearer ' + API.token }, body: fd, cache: 'no-store' })
+        .then(function (res) { return res.json().then(function (data) {
+          if (!res.ok) { throw new Error(data.error || '上传失败'); }
+          return data.examPaper;
+        }); });
+    },
+    previewExamPaperPdf: function (id, kind) {
+      var tab = window.open('', '_blank');
+      return fetch('/api/exam-papers/' + encodeURIComponent(id) + '/files/' + kind,
+        { headers: { Authorization: 'Bearer ' + API.token }, cache: 'no-store' })
+        .then(function (res) {
+          if (!res.ok) { throw new Error('预览失败（' + res.status + '）'); }
+          return res.blob();
+        }).then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          if (tab) { tab.location.href = url; }
+          else { window.ZJ.downloadBlob(blob, kind.toUpperCase() + '.pdf'); }
+          setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+        }).catch(function (err) {
+          if (tab) { tab.close(); }
+          throw err;
+        });
+    },
+    sourcePages: function (id, kind) {
+      return API.req('GET', '/api/exam-papers/' + encodeURIComponent(id) + '/pages/' + kind);
+    },
+    privateImage: function (path) {
+      return fetch(path, { headers: { Authorization: 'Bearer ' + API.token }, cache: 'no-store' })
+        .then(function (res) {
+          if (!res.ok) { throw new Error('私有页面预览失败（' + res.status + '）'); }
+          return res.blob();
+        }).then(function (blob) { return URL.createObjectURL(blob); });
+    },
+    sourcePageImage: function (id, kind, index, file) {
+      var path = '/api/exam-papers/' + encodeURIComponent(id) + '/pages/' + kind + '/' + index + '.png';
+      if (file) { path += '?file=' + encodeURIComponent(file); }
+      return API.privateImage(path);
+    },
+    sourceQuestions: function (id) {
+      return API.req('GET', '/api/exam-papers/' + encodeURIComponent(id) + '/source-questions').then(function (d) { return d.questions; });
+    },
+    createSourceQuestion: function (id, fields) {
+      return API.req('POST', '/api/exam-papers/' + encodeURIComponent(id) + '/source-questions', fields).then(function (d) { return d.question; });
+    },
+    sourceQuestion: function (id) {
+      return API.req('GET', '/api/source-questions/' + encodeURIComponent(id)).then(function (d) { return d.question; });
+    },
+    updateSourceRegions: function (id, fields) {
+      return API.req('PATCH', '/api/source-questions/' + encodeURIComponent(id) + '/regions', fields).then(function (d) { return d.question; });
+    },
+    sourceRegionImage: function (qid, rid) {
+      return API.privateImage('/api/source-questions/' + encodeURIComponent(qid) + '/regions/' + encodeURIComponent(rid) + '.png');
+    },
+    sourceQuestionRevision: function (qid, revision) {
+      return API.req('GET', '/api/source-questions/' + encodeURIComponent(qid) + '/revisions/' + encodeURIComponent(revision)).then(function (d) { return d.revision; });
+    },
+    sourceRevisionRegionImage: function (qid, revision, kind, order) {
+      return API.privateImage('/api/source-questions/' + encodeURIComponent(qid) + '/revisions/' + encodeURIComponent(revision) +
+        '/regions/' + encodeURIComponent(kind) + '/' + encodeURIComponent(order) + '.png');
+    },
     examTopics: function (paper) {
       return API.req('GET', '/api/exam-topics?paper=' + encodeURIComponent(paper)).then(function (d) { return d; });
     },
@@ -361,9 +415,27 @@
       db.nextExamId = db.exams.length + 1;
       ssSet(DEMO_DB_KEY, db);
     }
+    if (window.ZJ_MOCK.questionBankReset && db.questionBankReset !== window.ZJ_MOCK.questionBankReset) {
+      // Recoverable, one-time deletion of old questions; related records are retained.
+      var deletedAt = new Date().toISOString().slice(0, 19);
+      db.questions.forEach(function (q) { q.deletedAt = q.deletedAt || deletedAt; });
+      db.questionBankReset = window.ZJ_MOCK.questionBankReset;
+      ssSet(DEMO_DB_KEY, db);
+    }
     return db;
   }
   function demoSave(db) { ssSet(DEMO_DB_KEY, db); }
+  function mathDemoView(db) {
+    var questions = db.questions.filter(function (q) { return window.ZJ.isMathSubject(q.subject); });
+    var papers = db.papers.filter(function (p) { return window.ZJ.mathPaper(p, db.questions); });
+    return Object.assign({}, db, {
+      questions: questions,
+      papers: papers,
+      exams: db.exams.filter(function (e) { return papers.some(function (p) { return p.id === e.paperId; }); }),
+      knowledge: (db.knowledge || []).filter(function (n) { return window.ZJ.isMathSubject(n.subject); }),
+      subjects: db.subjects.filter(function (s) { return window.ZJ.isMathSubject(s.name); })
+    });
+  }
   function now() { return new Date().toISOString().slice(0, 19); }
   function normStem(s) {
     return String(s || '').toLowerCase().split('').filter(function (ch) { return /[a-z0-9\u4e00-\u9fa5]/.test(ch); }).join('');
@@ -379,50 +451,6 @@
     return Promise.reject(new Error('账号或密码不正确'));
   }
 
-  /* 演示模式邮箱验证码：不发信，验证码经 devCode 回显（与服务端开发模式同口径） */
-  var DEMO_EMAIL_KEY = 'zhxx_zj_demo_email_code_v1';
-  var DEMO_EMAIL_TTL = 300000;
-  var DEMO_EMAIL_COOLDOWN = 60000;
-  var DEMO_EMAIL_MAX_ATTEMPTS = 5;
-
-  function demoFindEmailUser(email) {
-    var hit = null;
-    (window.ZJ_MOCK.credentials || []).forEach(function (c) {
-      if (String(c.email || '').toLowerCase() === String(email).toLowerCase()) { hit = c; }
-    });
-    return hit;
-  }
-  function demoSendEmailCode(email) {
-    email = String(email || '').trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { return Promise.reject(new Error('邮箱格式不正确')); }
-    if (!demoFindEmailUser(email)) { return Promise.reject(new Error('该邮箱未绑定任何账号')); }
-    var last = ssGet(DEMO_EMAIL_KEY, null);
-    if (last && last.email === email && Date.now() - last.sentAt < DEMO_EMAIL_COOLDOWN) {
-      return Promise.reject(new Error('发送太频繁，请稍后再试'));
-    }
-    var code = String(Math.floor(100000 + Math.random() * 900000));
-    ssSet(DEMO_EMAIL_KEY, { email: email, code: code, sentAt: Date.now(), expiresAt: Date.now() + DEMO_EMAIL_TTL, attempts: 0 });
-    return Promise.resolve({ ok: true, ttl: DEMO_EMAIL_TTL / 1000, devCode: code });
-  }
-  function demoEmailLogin(email, code) {
-    email = String(email || '').trim().toLowerCase();
-    code = String(code || '').trim();
-    if (!/^\d{6}$/.test(code)) { return Promise.reject(new Error('请输入 6 位数字验证码')); }
-    var rec = ssGet(DEMO_EMAIL_KEY, null);
-    if (!rec || rec.email !== email) { return Promise.reject(new Error('请先获取验证码')); }
-    if (Date.now() > rec.expiresAt) { return Promise.reject(new Error('验证码已过期，请重新获取')); }
-    if (rec.attempts >= DEMO_EMAIL_MAX_ATTEMPTS) { return Promise.reject(new Error('错误次数过多，该验证码已作废，请重新获取')); }
-    if (rec.code !== code) {
-      rec.attempts += 1;
-      ssSet(DEMO_EMAIL_KEY, rec);
-      return Promise.reject(new Error('验证码不正确（剩余 ' + Math.max(0, DEMO_EMAIL_MAX_ATTEMPTS - rec.attempts) + ' 次机会）'));
-    }
-    ssSet(DEMO_EMAIL_KEY, null);
-    var user = demoFindEmailUser(email);
-    if (!user) { return Promise.reject(new Error('该邮箱未绑定任何账号')); }
-    return Promise.resolve({ role: user.role, name: user.name, title: user.title, account: user.account });
-  }
-
   function demoQuestionDict(q) { return JSON.parse(JSON.stringify(q)); }
   function demoUsedCount(db, qid) {
     var n = 0;
@@ -434,6 +462,7 @@
     var db = demoDb();
     var list = db.questions.slice().reverse();
     return list.filter(function (q) {
+      if (!window.ZJ.isMathSubject(q.subject)) { return false; }
       if (!includeDeleted && q.deletedAt) { return false; }
       if (filters.subject && filters.subject !== '全部科目' && q.subject !== filters.subject) { return false; }
       if (filters.qtype && filters.qtype !== '全部题型' && q.qtype !== filters.qtype) { return false; }
@@ -471,7 +500,7 @@
       var count = Math.max(0, Number(tr.count) || 0);
       if (!tr.qtype || count <= 0) { return; }
       var pool = db.questions.filter(function (q) {
-        return q.qtype === tr.qtype && q.status === '启用' && !q.deletedAt &&
+        return window.ZJ.isMathSubject(q.subject) && q.qtype === tr.qtype && q.status === '启用' && !q.deletedAt &&
           (subjects.length === 0 || subjects.indexOf(q.subject) >= 0) && !exclude[q.id];
       });
       if (tags.length) {
@@ -672,7 +701,7 @@
 
   var Demo = {
     bootstrap: function () {
-      var db = demoDb();
+      var db = mathDemoView(demoDb());
       var stats = Demo.statsSync(db);
       var tags = {};
       db.questions.forEach(function (q) {
@@ -681,16 +710,9 @@
           if (t) { tags[t] = true; }
         });
       });
-      var groups = [];
-      db.subjects.forEach(function (s) {
-        for (var i = 0; i < groups.length; i++) {
-          if (groups[i].group === s.group) { groups[i].items.push(s.name); return; }
-        }
-        groups.push({ group: s.group, items: [s.name] });
-      });
       return Promise.resolve({
         profile: window.ZJ_Auth ? window.ZJ_Auth.get() : null,
-        subjects: groups,
+        subjects: window.ZJ.SUBJECT_CATALOG,
         stats: stats,
         tags: Object.keys(tags).sort()
       });
@@ -706,6 +728,7 @@
     createQuestion: function (fields) {
       var db = demoDb();
       if (!fields.subject) { return Promise.reject(new Error('请选择科目')); }
+      if (!window.ZJ.isMathSubject(fields.subject)) { return Promise.reject(new Error('当前仅开放数学科目')); }
       if (!String(fields.stem || '').trim()) { return Promise.reject(new Error('题干不能为空')); }
       var known = db.subjects.some(function (s) { return s.name === fields.subject; });
       if (!known) { db.subjects.push({ name: fields.subject, group: '自定义' }); }
@@ -728,6 +751,7 @@
       var q = null;
       db.questions.forEach(function (x) { if (x.id === Number(id)) { q = x; } });
       if (!q) { return Promise.reject(new Error('试题不存在')); }
+      if (!window.ZJ.isMathSubject(fields.subject || q.subject)) { return Promise.reject(new Error('当前仅开放数学科目')); }
       Object.keys(fields).forEach(function (k) {
         if (fields[k] !== undefined) {
           if (k === 'imagePath') { q.imagePath = fields[k]; } else { q[k] = fields[k]; }
@@ -788,8 +812,8 @@
     },
     emptyTrash: function () {
       var db = demoDb();
-      var n = db.questions.filter(function (q) { return q.deletedAt; }).length;
-      db.questions = db.questions.filter(function (q) { return !q.deletedAt; });
+      var n = db.questions.filter(function (q) { return window.ZJ.isMathSubject(q.subject) && q.deletedAt; }).length;
+      db.questions = db.questions.filter(function (q) { return !window.ZJ.isMathSubject(q.subject) || !q.deletedAt; });
       demoSave(db);
       return Promise.resolve({ ok: true, purged: n });
     },
@@ -800,7 +824,7 @@
       if (target) {
         for (var i = db.questions.length - 1; i >= 0 && dups.length < 5; i--) {
           var q = db.questions[i];
-          if (q.deletedAt || q.id === Number(excludeId)) { continue; }
+          if (!window.ZJ.isMathSubject(q.subject) || q.deletedAt || q.id === Number(excludeId)) { continue; }
           if (normStem(q.stem) === target) {
             dups.push({ id: q.id, subject: q.subject, qtype: q.qtype, stem: q.stem.slice(0, 60) });
           }
@@ -815,7 +839,7 @@
     generate: function (params) { return demoGenerate(params); },
 
     papers: function () {
-      var db = demoDb();
+      var db = mathDemoView(demoDb());
       return Promise.resolve(db.papers.slice().sort(function (a, b) {
         return String(b.updatedAt).localeCompare(String(a.updatedAt));
       }).map(demoPaperMeta));
@@ -894,7 +918,7 @@
 
     /* ---- 考试 ---- */
     exams: function () {
-      var db = demoDb();
+      var db = mathDemoView(demoDb());
       return Promise.resolve(db.exams.slice().reverse().map(function (e) { return demoExamMeta(db, e); }));
     },
     exam: function (id) {
@@ -1046,7 +1070,9 @@
     /* ---- 蓝图 ---- */
     blueprints: function () {
       var db = demoDb();
-      return Promise.resolve(db.blueprints.map(function (b, i) {
+      return Promise.resolve(db.blueprints.filter(function (b) {
+        return b.config && b.config.subjects && b.config.subjects.length && b.config.subjects.every(window.ZJ.isMathSubject);
+      }).map(function (b, i) {
         return { id: b.id || i + 1, name: b.name, config: b.config, createdAt: b.createdAt || '' };
       }));
     },
@@ -1066,7 +1092,7 @@
 
     /* ---- 知识点树（演示模式存本地库） ---- */
     knowledge: function () {
-      var db = demoDb();
+      var db = mathDemoView(demoDb());
       return Promise.resolve(Demo.knowledgeTree(db));
     },
     knowledgeTree: function (db) {
@@ -1206,7 +1232,7 @@
     },
 
     statsSync: function (db) {
-      db = db || demoDb();
+      db = mathDemoView(db || demoDb());
       var byType = {}, byDiff = {}, bySub = {};
       var weekAgo = Date.now() - 7 * 864e5;
       var weekNew = 0;
@@ -1338,7 +1364,7 @@
       var db = demoDb();
       var favIds = (db.favorites || []).map(function (f) { return f.questionId; });
       return Promise.resolve(db.questions.filter(function (q) {
-        return favIds.indexOf(q.id) >= 0 && !q.deletedAt;
+        return window.ZJ.isMathSubject(q.subject) && favIds.indexOf(q.id) >= 0 && !q.deletedAt;
       }).map(function (q) {
         var d = JSON.parse(JSON.stringify(q));
         d.usedCount = demoUsedCount(db, q.id);
@@ -1371,7 +1397,8 @@
     generatedFiles: function (userPaperId) {
       var db = demoDb();
       var list = (db.generatedFiles || []).filter(function (f) {
-        return !userPaperId || f.userPaperId === Number(userPaperId);
+        var paper = db.papers.find(function (p) { return p.id === f.userPaperId; });
+        return paper && window.ZJ.mathPaper(paper, db.questions) && (!userPaperId || f.userPaperId === Number(userPaperId));
       }).map(function (f) {
         var paper = db.papers.find(function (p) { return p.id === f.userPaperId; });
         return Object.assign({}, f, { paperName: paper ? paper.name : '' });
@@ -1437,12 +1464,6 @@
     login: function (account, password) {
       return API.mode === 'server' ? API.login(account, password) : demoLogin(account, password);
     },
-    sendEmailCode: function (email) {
-      return API.mode === 'server' ? API.sendEmailCode(email) : demoSendEmailCode(email);
-    },
-    emailLogin: function (email, code) {
-      return API.mode === 'server' ? API.emailLogin(email, code) : demoEmailLogin(email, code);
-    },
     logout: function () { API.logout(); },
 
     bootstrap: function () { return API.mode === 'server' ? API.bootstrap() : Demo.bootstrap(); },
@@ -1491,13 +1512,39 @@
     saveBlueprint: function (name, config) { return API.mode === 'server' ? API.saveBlueprint(name, config) : Demo.saveBlueprint(name, config); },
     deleteBlueprint: function (id) { return API.mode === 'server' ? API.deleteBlueprint(id) : Demo.deleteBlueprint(id); },
 
+    workspaceRequest: function (method, path, body) {
+      if (API.mode === 'server') { return API.req(method, path, body); }
+      if (window.ZJ_StaticBank) {
+        return Promise.resolve().then(function () { return window.ZJ_StaticBank.handle(method, path, body); });
+      }
+      return Promise.reject(new Error('原卷题卡工作台需要后端服务；静态模式不包含私有题卡。'));
+    },
+    workspaceImage: function (path) {
+      if (API.mode !== 'server' && window.ZJ_StaticBank) { return window.ZJ_StaticBank.image(path); }
+      return API.privateImage(path);
+    },
     stats: function () { return API.mode === 'server' ? API.stats() : Demo.stats(); },
     auditList: function (action) { return API.mode === 'server' ? API.auditList(action) : Demo.auditList(action); },
     changePassword: function (o, n) { return API.mode === 'server' ? API.changePassword(o, n) : Demo.changePassword(o, n); },
-    examPapers: function (filters) { return API.mode === 'server' ? API.examPapers(filters) : Demo.examPapers(filters); },
+    examPapers: function (filters) {
+      if (API.mode === 'server') { return API.examPapers(filters); }
+      if (window.ZJ_StaticBank) { return Promise.resolve(window.ZJ_StaticBank.examPapers(filters)); }
+      return Demo.examPapers(filters);
+    },
     createExamPaper: function (f) { return API.mode === 'server' ? API.createExamPaper(f) : Demo.createExamPaper(f); },
     updateExamPaper: function (id, f) { return API.mode === 'server' ? API.updateExamPaper(id, f) : Demo.updateExamPaper(id, f); },
     deleteExamPaper: function (id) { return API.mode === 'server' ? API.deleteExamPaper(id) : Demo.deleteExamPaper(id); },
+    uploadExamPaperPdf: function (id, kind, file) { return API.mode === 'server' ? API.uploadExamPaperPdf(id, kind, file) : Promise.reject(new Error('请启动正式后端后上传原始 PDF')); },
+    previewExamPaperPdf: function (id, kind) { return API.mode === 'server' ? API.previewExamPaperPdf(id, kind) : Promise.reject(new Error('静态演示模式无法预览私有 PDF')); },
+    sourcePages: function (id, kind) { return API.mode === 'server' ? API.sourcePages(id, kind) : Promise.reject(new Error('请从正式后台访问完整原卷')); },
+    sourcePageImage: function (id, kind, index, file) { return API.mode === 'server' ? API.sourcePageImage(id, kind, index, file) : Promise.reject(new Error('静态模式无法预览私有页面')); },
+    sourceQuestions: function (id) { return API.mode === 'server' ? API.sourceQuestions(id) : Promise.reject(new Error('静态模式无法查看私有草稿')); },
+    createSourceQuestion: function (id, fields) { return API.mode === 'server' ? API.createSourceQuestion(id, fields) : Promise.reject(new Error('请从正式后台结构化大题')); },
+    sourceQuestion: function (id) { return API.mode === 'server' ? API.sourceQuestion(id) : Promise.reject(new Error('静态模式无法查看私有草稿')); },
+    updateSourceRegions: function (id, fields) { return API.mode === 'server' ? API.updateSourceRegions(id, fields) : Promise.reject(new Error('静态模式无法修改私有草稿')); },
+    sourceRegionImage: function (qid, rid) { return API.mode === 'server' ? API.sourceRegionImage(qid, rid) : Promise.reject(new Error('静态模式无法查看私有草稿')); },
+    sourceQuestionRevision: function (qid, revision) { return API.mode === 'server' ? API.sourceQuestionRevision(qid, revision) : Promise.reject(new Error('静态模式无法查看私有草稿历史')); },
+    sourceRevisionRegionImage: function (qid, revision, kind, order) { return API.mode === 'server' ? API.sourceRevisionRegionImage(qid, revision, kind, order) : Promise.reject(new Error('静态模式无法查看私有草稿历史')); },
     examTopics: function (paper) { return API.mode === 'server' ? API.examTopics(paper) : Demo.examTopics(paper); },
     favorites: function () { return API.mode === 'server' ? API.favorites() : Demo.favorites(); },
     addFavorite: function (qid) { return API.mode === 'server' ? API.addFavorite(qid) : Demo.addFavorite(qid); },

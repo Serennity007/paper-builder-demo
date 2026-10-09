@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>教研工作台 · 国际课程组卷系统</title>
-  <link rel="stylesheet" href="vendor/lxgw/lxgwwenkaigbscreen.css">
-  <link rel="stylesheet" href="css/style.css?v=20261001d">
+  <title>教研工作台 · 国际数学组卷系统</title>
+  <link rel="stylesheet" href="css/style.css?v=20261001b">
+  <link rel="stylesheet" href="css/workspace.css?v=20261002">
 </head>
 <body>
 
@@ -18,7 +18,7 @@
           <path d="M14 4v5h5"/><path d="M8.5 13h7M8.5 16.5h5"/>
         </svg>
       </span>
-      国际课程组卷系统
+      国际数学组卷系统
       <span class="brand-sub">教研组卷工作台</span>
     </div>
     <div class="spacer"></div>
@@ -33,41 +33,83 @@
   </header>
 
   <main class="page">
-    <!-- 页签导航 -->
-    <nav class="nav-tabs" id="nav-tabs">
-      <button class="nav-tab active" data-tab="builder">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        组卷台
-      </button>
-      <button class="nav-tab" data-tab="archive">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h9l5 5v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
-        真题库
-      </button>
-      <button class="nav-tab" data-tab="practice">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20l-7-7a4.6 4.6 0 1 1 7-6 4.6 4.6 0 1 1 7 6l-7 7z"/></svg>
-        刷题
-      </button>
-      <button class="nav-tab" data-tab="bank">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z"/><path d="M19 17H6a2 2 0 0 0-2 2"/><path d="M9 7h6M9 11h6"/></svg>
-        题库
-      </button>
-      <button class="nav-tab" data-tab="papers">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z"/><path d="M14 3v6h6"/><path d="M9 13h6M9 17h6"/></svg>
-        试卷库
-      </button>
-      <button class="nav-tab" data-tab="overview">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-        总览
-      </button>
-      <button class="nav-tab" data-tab="exams">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4h6v3a3 3 0 0 1-6 0V4z"/><path d="M10 4H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><path d="M9 12h6M9 16h4"/></svg>
-        考试
-      </button>
-      <button class="nav-tab" data-tab="audit">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-        审计
-      </button>
+    <section class="workspace-intro">
+      <div><h1>教研题库工作台</h1><p>完整原卷 → 裁剪题卡 → 教材 Topic → 组卷</p></div>
+      <label>考试局 <select id="workspace-board"><option value="Edexcel">Pearson Edexcel</option><option value="CAIE">Cambridge International（CAIE）</option><option value="AQA">AQA</option></select></label>
+    </section>
+    <nav class="nav-tabs" id="nav-tabs" aria-label="后台模块">
+      <button class="nav-tab active" data-tab="archive">原卷管理</button>
+      <button class="nav-tab" data-tab="cards">题目管理</button>
+      <button class="nav-tab" data-tab="compose">组卷</button>
+      <button class="nav-tab" data-tab="leads">诊断线索 / Leads</button>
     </nav>
+    <section id="tab-leads" hidden>
+      <div class="section-head"><h2>诊断线索 / Leads</h2><button class="btn btn-ghost" id="leads-refresh">刷新线索</button></div>
+      <p>最近 200 条咨询 · 仅管理员可查看 · <a href="diagnostic.html" target="_blank" rel="noopener">打开学生 P1 快速诊断</a></p>
+      <p id="leads-status" role="status"></p>
+      <label><input type="checkbox" id="leads-priority-only"> 只看重点客户</label>
+      <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>姓名 / 联系方式</th><th>课程 / 考试时间</th><th>准备度</th><th>薄弱 / 风险 Topic</th><th>未学 Topic</th><th>意向 / 提交时间</th><th>关注 / 操作</th></tr></thead><tbody id="leads-rows"></tbody></table></div>
+    </section>
+    <section id="tab-cards" hidden>
+      <div class="section-head"><h2>裁剪题卡</h2><button class="btn btn-ghost" id="wc-catalog-open">教材目录</button></div>
+      <div class="toolbar">
+        <select id="wc-view"><option value="topic">按知识点看题</option><option value="source">按原卷看题</option></select>
+        <select id="wc-paper" aria-label="卷型"></select>
+        <select id="wc-catalog" aria-label="教材版本"></select>
+        <select id="wc-topic" aria-label="教材知识点"></select>
+        <select id="wc-source" aria-label="来源原卷" hidden></select>
+        <select id="wc-state"><option value="">全部题卡</option><option value="pending">待确认</option><option value="ready">可用于组卷</option></select>
+      </div>
+      <p class="f-hint" id="wc-directory-note"></p>
+      <div class="question-cards" id="wc-list"></div>
+    </section>
+    <section id="tab-compose" hidden>
+      <div class="section-head"><h2>组卷</h2><button class="btn btn-ghost" id="wg-saved-toggle">已保存试卷</button></div>
+      <p class="f-hint">材料来自已确认可用的裁剪题卡。先选卷型和 Topic，再按难度、预计分钟、来源年份筛选。</p>
+      <div class="toolbar" id="wg-filters">
+        <select id="wg-paper" aria-label="组卷卷型"></select>
+        <select id="wg-catalog" aria-label="组卷教材版本"></select>
+        <select id="wg-topic" aria-label="组卷知识点"></select>
+        <select id="wg-difficulty"><option value="">全部难度</option><option value="1">1 · 基础</option><option value="2">2 · 较易</option><option value="3">3 · 中等</option><option value="4">4 · 较难</option><option value="5">5 · 挑战</option></select>
+        <input type="number" id="wg-year" placeholder="原卷年份" min="2000" max="2100" aria-label="来源年份">
+        <input type="number" id="wg-max-minutes" placeholder="单题最多分钟" min="1" max="600" aria-label="单题预计分钟上限">
+        <input type="number" id="wg-target" placeholder="目标总分钟" min="1" max="600" value="30" aria-label="目标总分钟">
+        <button class="btn btn-primary" id="wg-generate">按条件选题</button>
+      </div>
+      <p id="wg-result" role="status"></p>
+      <div class="compose-grid">
+        <div><h3>候选题卡</h3><div class="question-cards" id="wg-list"></div></div>
+        <div class="card compose-paper"><div class="section-head"><h2>当前试卷</h2><button class="btn-mini" id="wg-clear">新建 / 清空</button></div>
+          <input id="wg-name" placeholder="试卷名称" aria-label="试卷名称">
+          <p id="wg-sum"></p><p class="f-hint" id="wg-scope"></p><div id="wg-items"></div>
+          <div class="row-actions"><button class="btn btn-primary" id="wg-save">保存试卷</button><button class="btn btn-ghost" id="wg-qp" disabled>下载 QP</button><button class="btn btn-ghost" id="wg-ms" disabled>下载 MS</button></div>
+          <p class="f-hint">已保存试卷保留题卡当时的内容版本；调整后请先保存再下载。</p>
+        </div>
+      </div>
+      <div id="wg-saved" hidden></div>
+    </section>
+    <div class="modal-mask" id="modal-card-metadata"><div class="modal">
+      <div class="modal-head"><div><div class="m-title">题卡标签与可用状态</div><div class="m-sub" id="wm-source"></div></div><button class="modal-close" data-close="modal-card-metadata">✕</button></div>
+      <div class="modal-body"><div class="form-grid">
+        <div class="form-item"><label>难度</label><select id="wm-diff"><option value="1">1 · 基础</option><option value="2">2 · 较易</option><option value="3">3 · 中等</option><option value="4">4 · 较难</option><option value="5">5 · 挑战</option></select></div>
+        <div class="form-item"><label>预计完成时间（分钟）</label><input id="wm-minutes" type="number" min="1" max="600"></div>
+        <div class="form-item"><label>分值</label><input id="wm-marks" type="number" min="0.5" max="1000" step="0.5"></div>
+      </div><h3>教材 Topic（可多选）</h3><div id="wm-topics"></div>
+      <label class="confirm-line"><input id="wm-confirm" type="checkbox"> 我已检查完整题干、MS 对应或暂缺状态及标签，可以用于内部组卷。</label>
+      <p class="f-hint">修改裁剪后需再次确认。此操作不公开私有原卷。</p>
+      <div class="form-actions"><button class="btn btn-ghost" id="wm-draft">保存草稿</button><button class="btn btn-primary" id="wm-approve">确认可用</button></div></div>
+    </div></div>
+    <div class="modal-mask" id="modal-textbook"><div class="modal">
+      <div class="modal-head"><div><div class="m-title">官方教材目录</div><div class="m-sub">目录按考试局、卷型、教材版本隔离；不自动套用其他考试局或旧知识树。</div></div><button class="modal-close" data-close="modal-textbook">✕</button></div>
+      <div class="modal-body"><div class="form-grid">
+        <div class="form-item"><label>卷型 / 科目模块</label><input id="wt-paper" placeholder="例如 P1、9709 Paper 1"></div>
+        <div class="form-item"><label>官方教材名称</label><input id="wt-title"></div>
+        <div class="form-item"><label>版本 / ISBN</label><input id="wt-edition"></div>
+        <div class="form-item"><label>目录来源（官方链接或教材页码）</label><input id="wt-source"></div>
+      </div><div class="form-item"><label>目录：每行「章节 | 知识点」，按教材顺序填写</label><textarea id="wt-entries" rows="9" placeholder="填写所选教材实际目录，不使用示例知识点"></textarea></div>
+      <label class="confirm-line"><input id="wt-confirm" type="checkbox"> 我已核对目录与当前考试局的官方教材及版本一致。</label>
+      <div class="form-actions"><button class="btn btn-primary" id="wt-save">保存教材目录</button></div></div>
+    </div></div>
 
     <!-- ========== 总览 ========== -->
     <section id="tab-overview" hidden>
@@ -107,13 +149,14 @@
     </section>
 
     <!-- ========== 真题库 ========== -->
-    <section id="tab-archive" hidden>
+    <section id="tab-archive">
       <div class="toolbar">
-        <select id="ar-paper"><option value="全部">全部 Paper</option><option value="P1">P1</option><option value="P2">P2</option></select>
+        <input id="ar-paper" list="ar-paper-options" placeholder="卷型 / 模块（全部）" aria-label="原卷卷型" style="height:38px;width:170px;">
+        <datalist id="ar-paper-options"></datalist>
         <input type="number" id="ar-year" placeholder="年份" style="height:38px;width:90px;border:1px solid var(--c-border);border-radius:6px;padding:0 10px;">
-        <select id="ar-session"><option value="全部">全部考季</option><option value="January">January</option><option value="June">June</option><option value="October">October</option></select>
+        <select id="ar-session"><option value="全部">全部考季</option><option value="January">January</option><option value="June">June</option><option value="Summer">Summer</option><option value="October">October</option></select>
         <select id="ar-status"><option value="全部状态">全部状态</option><option value="published">已发布</option><option value="draft">草稿</option><option value="disabled">已下架</option></select>
-        <button class="btn btn-primary" id="btn-ep-new">＋ 新建真题卷</button>
+        <button class="btn btn-primary" id="btn-ep-new">＋ 新建原卷</button>
         <span class="result-count" id="ar-count"></span>
       </div>
       <div class="table-wrap">
@@ -122,6 +165,8 @@
           <tbody id="ar-tbody"></tbody>
         </table>
       </div>
+      <div class="section-head" style="margin-top:22px;"><h2>原卷题卡与裁剪修订</h2><span class="sec-note">标签与可用状态统一在「题目管理」维护</span></div>
+      <div id="ar-source-drafts" class="table-wrap" style="padding:14px;">请选择有完整 PDF 的原卷，点击「创建大题」；保存后可在此重新打开预览。</div>
     </section>
 
     <!-- ========== 知识点刷题 ========== -->
@@ -219,9 +264,9 @@
     </section>
 
     <!-- ========== 组卷台（双栏工作区） ========== -->
-    <section id="tab-builder">
+    <section id="tab-builder" hidden>
       <div class="ws-toolbar">
-        <input type="text" id="ws-name" placeholder="试卷名称 *（如：雅思阅读强化周测）" class="ws-name">
+        <input type="text" id="ws-name" placeholder="试卷名称 *（如：Edexcel P1 数学练习）" class="ws-name">
         <input type="text" id="ws-line" placeholder="卷面科目行（可空）" class="ws-line">
         <input type="number" id="ws-duration" placeholder="时长" min="0" class="ws-dur" title="建议总时长（分钟），留空自动汇总">
         <select id="ws-variant" class="ws-var" title="卷型标记">
@@ -319,7 +364,7 @@
     </section>
   </main>
 
-  <footer class="site-footer">成都智慧象留学 · 国际课程组卷系统（端口 8687）</footer>
+  <footer class="site-footer">成都智慧象留学 · 国际课程题库与组卷</footer>
 
   <!-- 新增/编辑试题弹窗 -->
   <div class="modal-mask" id="modal-question">
@@ -358,15 +403,15 @@
           <div class="form-item full">
             <label>知识点（从大纲选择或直接输入，顿号分隔）</label>
             <div style="display:flex;gap:8px;align-items:center;">
-              <input type="text" id="e-tags" list="tag-list-2" placeholder="如：同义替换、长难句" style="flex:1;">
+              <input type="text" id="e-tags" list="tag-list-2" placeholder="如：Quadratics、Differentiation" style="flex:1;">
               <button type="button" class="btn btn-ghost" id="btn-e-knowledge" style="height:38px;flex:none;">从大纲选择</button>
             </div>
             <datalist id="tag-list-2"></datalist>
             <div id="e-knowledge-picker" hidden></div>
           </div>
           <div class="form-item full">
-            <label>材料 / 文章 / 听力原文（可空）</label>
-            <textarea id="e-passage" placeholder="阅读文章、听力原文、题干背景等"></textarea>
+            <label>公共题干 / 题目背景（可空）</label>
+            <textarea id="e-passage" placeholder="大题的公共条件、函数定义或题目背景"></textarea>
           </div>
           <div class="form-item full">
             <label>题干 <span class="req">*</span></label>
@@ -387,7 +432,7 @@
           </div>
           <div class="form-item full" id="e-answer-text-wrap">
             <label>参考答案 / 评分要点 <span class="req">*</span></label>
-            <textarea id="e-answer-text" placeholder="填空/简答/写作/口语题填参考答案或评分要点"></textarea>
+            <textarea id="e-answer-text" placeholder="填写参考答案、解题步骤或评分要点"></textarea>
           </div>
           <div class="form-item full">
             <label>解析（可空，打印教师卷时随答案展示）</label>
@@ -395,7 +440,7 @@
           </div>
           <div class="form-item">
             <label>来源</label>
-            <input type="text" id="e-source" placeholder="如：剑桥雅思 19 / OG / 自编">
+            <input type="text" id="e-source" placeholder="如：Edexcel P1 June 2024 / 教研自编">
           </div>
           <div class="form-item">
             <label>建议分值</label>
@@ -416,8 +461,8 @@
               <option value="0">私有题（仅自己与总监可见）</option>
             </select>
           </div>
-          <div class="form-item full">
-            <label>听力音频（mp3/wav/m4a ≤20MB，在线答题时学生可播放）</label>
+          <div class="form-item full" hidden>
+            <label>历史音频附件</label>
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
               <input type="file" id="e-audio-file" accept=".mp3,.wav,.m4a,.ogg,.aac,.webm" hidden>
               <button type="button" class="btn btn-ghost" id="btn-e-audio">上传音频</button>
@@ -567,25 +612,25 @@
     <div class="modal">
       <div class="modal-head">
         <div>
-          <div class="m-title" id="ep-title">新建真题卷</div>
+          <div class="m-title" id="ep-title">新建原卷</div>
           <div class="m-sub">Pearson Edexcel IAL Mathematics · QP = Question Paper，MS = Mark Scheme</div>
         </div>
         <button class="modal-close" data-close="modal-exampaper">✕</button>
       </div>
       <div class="modal-body">
-        <input type="hidden" id="ep-id">
+        <input type="hidden" id="ep-id"><div class="form-item"><label>考试局</label><select id="ep-board"><option value="Edexcel">Pearson Edexcel</option><option value="CAIE">CAIE</option><option value="AQA">AQA</option></select></div>
         <div class="form-grid three">
           <div class="form-item">
             <label>Paper <span class="req">*</span></label>
-            <select id="ep-paper"><option value="P1">P1 · Pure Mathematics 1</option><option value="P2">P2 · Pure Mathematics 2</option></select>
+            <input id="ep-paper" placeholder="如 P1、9709 Paper 1、7357/1" maxlength="80">
           </div>
           <div class="form-item">
             <label>年份 <span class="req">*</span></label>
             <input type="number" id="ep-year" min="2000" max="2030">
           </div>
           <div class="form-item">
-            <label>考季</label>
-            <select id="ep-session"><option value="January">January</option><option value="June">June</option><option value="October">October</option><option value="November">November</option></select>
+            <label>考季 <span class="req">*</span></label>
+            <select id="ep-session"><option value="January">January</option><option value="June">June</option><option value="Summer">Summer</option><option value="October">October</option><option value="November">November</option></select>
           </div>
           <div class="form-item">
             <label>卷号（Paper Code）</label>
@@ -593,13 +638,18 @@
           </div>
           <div class="form-item">
             <label>状态</label>
-            <select id="ep-status"><option value="published">已发布</option><option value="draft">草稿</option><option value="disabled">已下架</option></select>
+            <select id="ep-status"><option value="draft">草稿</option><option value="published">已发布</option><option value="disabled">已下架</option></select>
           </div>
+        </div>
+        <div class="form-grid" style="margin-top:14px;">
+          <div class="form-item"><label>QP 来源说明</label><input type="text" id="ep-qp-source" placeholder="例如：教研提供的 Pearson 原卷"></div>
+          <div class="form-item"><label>MS 来源说明</label><input type="text" id="ep-ms-source" placeholder="对应的官方评分方案"></div>
+          <div class="form-item"><label>展示与使用权限备注</label><input type="text" id="ep-permission-note" placeholder="仅供内部演示；公开使用待确认"></div>
+          <div class="form-item"><label>展示范围</label><select id="ep-display-scope"><option value="internal">仅教研后台</option><option value="public">公开原卷元数据</option></select></div>
         </div>
         <div class="form-grid" style="margin-top:14px;">
           <div class="form-item">
             <label>Question Paper PDF</label>
-            <input type="hidden" id="ep-qp-url">
             <div style="display:flex;gap:8px;align-items:center;">
               <input type="file" id="ep-qp-file" accept=".pdf" hidden>
               <button type="button" class="btn btn-ghost" id="btn-ep-qp">上传 QP</button>
@@ -608,7 +658,6 @@
           </div>
           <div class="form-item">
             <label>Mark Scheme PDF</label>
-            <input type="hidden" id="ep-ms-url">
             <div style="display:flex;gap:8px;align-items:center;">
               <input type="file" id="ep-ms-file" accept=".pdf" hidden>
               <button type="button" class="btn btn-ghost" id="btn-ep-ms">上传 MS</button>
@@ -618,8 +667,54 @@
         </div>
         <div class="form-actions">
           <button class="btn btn-ghost" data-close="modal-exampaper">取消</button>
-          <button class="btn btn-primary" id="btn-ep-save">保存真题卷</button>
+          <button class="btn btn-primary" id="btn-ep-save">保存原卷</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 1B: one complete original question, with ordered QP/MS regions -->
+  <div class="modal-mask" id="modal-source-question">
+    <div class="modal" style="max-width:1060px;">
+      <div class="modal-head">
+        <div><div class="m-title" id="sq-title">从原卷创建完整大题</div>
+          <div class="m-sub">原卷页面与 MS 区域由教研人工选择；(a)/(b) 等小问必须包含在同一道大题内。</div></div>
+        <button class="modal-close" data-close="modal-source-question">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid" style="margin-bottom:12px;">
+          <div class="form-item"><label>原生大题号 <span class="req">*</span></label><input id="sq-number" inputmode="numeric" maxlength="3" placeholder="如 1；不要写 1(a)"></div>
+          <div class="form-item"><label>查看原卷</label><select id="sq-kind"><option value="qp">Question Paper（QP）</option><option value="ms">Mark Scheme（MS）</option></select></div>
+        </div>
+        <div id="sq-selector">
+          <div class="row-actions" style="margin:12px 0;align-items:center;">
+            <button type="button" class="btn btn-ghost" id="sq-prev">上一页</button>
+            <label>PDF 页码 <input type="number" id="sq-page" min="1" style="width:70px;height:34px;"></label>
+            <span id="sq-page-total"></span>
+            <button type="button" class="btn btn-ghost" id="sq-next">下一页</button>
+            <button type="button" class="btn btn-ghost" id="sq-add-full">加入整页</button>
+            <button type="button" class="btn btn-primary" id="sq-add-region">加入拖选区域</button>
+          </div>
+          <p class="f-hint">在页面图片上拖拽选择内容；跨页大题请按阅读顺序逐页加入，MS 可单独选多页。页码按 PDF 页码计算。</p>
+          <div id="sq-original" hidden style="margin:10px 0;padding:10px;border:1px dashed #d5a06a;border-radius:6px;background:#fdf9f4;">
+            <strong style="font-size:13px;">原选区（对比用，保存前不变）</strong>
+            <div id="sq-original-list" style="margin-top:6px;"></div>
+          </div>
+          <div id="sq-stage" style="position:relative;width:fit-content;max-width:100%;margin:10px auto;border:1px solid #d5dde6;touch-action:none;">
+            <img id="sq-image" alt="私有原卷页（仅后台可见）" draggable="false" style="display:block;max-width:100%;max-height:690px;width:auto;height:auto;user-select:none;">
+            <div id="sq-selection" hidden style="position:absolute;border:2px solid #b76c2f;background:rgba(208,144,76,.14);pointer-events:none;"></div>
+          </div>
+          <div class="section-head"><h2>已选区域 · 拖选加入后可调整顺序</h2></div>
+          <div id="sq-regions"></div>
+          <div class="form-item" id="sq-note-wrap" style="margin:14px 0 0;">
+            <label>修改说明（修正时必填，供教研复核）</label>
+            <input type="text" id="sq-note" maxlength="200" placeholder="如：MS 右边界由 0.95 扩至整页，原选区裁切了评分表右边框">
+          </div>
+          <label style="display:block;margin:16px 0;"><input type="checkbox" id="sq-confirm"> 我已预览初选区域；原题号、大题边界和 QP/MS 对应仍待教研最终验收，保存仅为私有草稿。</label>
+          <div class="form-actions"><button class="btn btn-ghost" data-close="modal-source-question">取消</button><button class="btn btn-primary" id="sq-save">保存私有草稿（不发布）</button></div>
+        </div>
+        <div id="sq-saved" hidden></div>
+        <div id="sq-history" hidden></div>
       </div>
     </div>
   </div>
@@ -677,7 +772,7 @@
       <div class="modal-body">
         <div class="form-item">
           <label>蓝图名称 <span class="req">*</span></label>
-          <input type="text" id="bp-name" placeholder="如：雅思阅读强化周测蓝图">
+          <input type="text" id="bp-name" placeholder="如：P1 数学复习蓝图">
           <span class="f-hint">保存当前题型配置、难度分布与范围科目；载入后一键复用</span>
         </div>
         <div class="form-actions">
@@ -702,7 +797,7 @@
         <div class="form-grid three">
           <div class="form-item">
             <label>考试名称 <span class="req">*</span></label>
-            <input type="text" id="x-name" placeholder="如：雅思阅读周测（10 月第 1 周）">
+            <input type="text" id="x-name" placeholder="如：P1 数学周测（10 月第 1 周）">
           </div>
           <div class="form-item">
             <label>关联试卷 <span class="req">*</span></label>
@@ -737,13 +832,14 @@
     </div>
   </div>
 
-  <script src="js/common.js?v=20261001d"></script>
-  <script src="js/mock-data.js?v=20261001d"></script>
-  <script src="js/api.js?v=20261001d"></script>
-  <script src="js/admin.js?v=20261001d"></script>
-  <script src="js/builder.js?v=20261001d"></script>
-  <script src="js/exams.js?v=20261001d"></script>
-  <script src="js/archive.js?v=20261001d"></script>
-  <script src="js/micro.js?v=20261001d"></script>
+  <script src="js/common.js?v=20261001b"></script>
+  <script src="js/mock-data.js?v=20261009p1static"></script>
+  <script src="js/p1-bank.js?v=20261009p1static"></script>
+  <script src="js/static-bank.js?v=20261009p1static"></script>
+  <script src="js/api.js?v=20261009p1static"></script>
+  <script src="js/admin.js?v=20261006leads"></script>
+  <script src="js/leads.js?v=20261009p1static"></script>
+  <script src="js/archive.js?v=20261002workspaceb"></script>
+  <script src="js/workspace.js?v=20261002b"></script>
 </body>
 </html>
